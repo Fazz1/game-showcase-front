@@ -1,13 +1,18 @@
 var latest_showcasesContainer = document.querySelector('.latest-showcases');
 var baseUrl = 'http://localhost:3000/api';
 
-
 var loginLi = document.querySelector('.login-li');
 var signupLi = document.querySelector('.signup-li');
 var logoutLi = document.querySelector('.logout-li');
 var createShowcaseLi = document.querySelector('.createShowcase-li');
 
 var currentUser = null;
+
+// for the edit
+var isEditMode =  false;
+var selectedId = '';
+var editingDataTableRow;
+
 var showcasesTable;
 var HTTP;
 
@@ -69,7 +74,19 @@ function signupAction() {
   return false;
 }
 
-function createShowcaseAction() {
+
+function setEditModel(editMode) {
+  isEditMode = editMode
+
+  if (!isEditMode) {  // create showcase
+    document.querySelector('#gameTitle').value = '';
+    document.querySelector('#gameGenre').value = '';
+    document.querySelector('#gameAge').value = '';
+    document.querySelector('#gamePlatforms').value = '';
+  }
+}
+
+function createEditShowcaseAction() {
   const title = document.querySelector('#gameTitle').value;
   const genre = document.querySelector('#gameGenre').value;
   const age = document.querySelector('#gameAge').value;
@@ -79,17 +96,56 @@ function createShowcaseAction() {
   platforms = platforms.filter(item => { if (item.trim() != "") return true; else return false; })
                         .map(item => { return item.trim() })
 
-  HTTP.post(`${baseUrl}/showcases/create`, {
-    title, genre, age, region, platforms
-  }).then(res => {
-    $('#createShowcaseModal').modal('hide');
-    appendRowTotable(res.data.showcase);
-  })
-  .catch(err => {
-    alert('can not create the showcase!');
-  })
+  if (!isEditMode) {  // create ?
+    HTTP.post(`${baseUrl}/showcases/create`, {
+      title, genre, age, region, platforms
+    }).then(res => {
+      $('#createShowcaseModal').modal('hide');
+      appendRowTotable(res.data.showcase);
+    })
+    .catch(err => {
+      alert('can not create the showcase!');
+    })
+  } else {
+    HTTP.post(`${baseUrl}/showcases/update`, {
+      _id: selectedId,
+      title, genre, age, region, platforms
+    }).then(res => {
+      $('#createShowcaseModal').modal('hide');
+      // console.log('UPDATED', res.data.showcase);
+      updateShowCaseFromDatatable(res.data.showcase);
+
+    })
+    .catch(err => {
+      console.log(err);
+      alert('can not update the showcase!');
+    })
+  }
   return false;
 }
+
+// update the form
+function makeToUpdateMode(uiElement, data) {
+
+  setEditModel(true);
+  selectedId = data._id;
+  editingDataTableRow = uiElement;
+
+  document.querySelector('#gameTitle').value = data.title;
+  document.querySelector('#gameGenre').value = data.genre;
+  document.querySelector('#gameAge').value = data.age;
+  document.querySelector('#gameRegion').value = data.region;
+  var platforms = "";
+  data.platforms.map(item => {
+    platforms += item + ",";
+  })
+  document.querySelector('#gamePlatforms').value = platforms;
+
+  $('#createShowcaseModal').modal('show');
+
+}
+
+
 function logoutAction() {
   HTTP.get(`${baseUrl}/users/logout`)
   .then(res => {
@@ -97,6 +153,12 @@ function logoutAction() {
     window.location = '/';
   });
 }
+
+function updateShowCaseFromDatatable(showcase) {
+  console.log('updated showcase', showcase);
+  location.reload();  
+}
+
 function appendRowTotable(data) {
   showcasesTable.row.add(data).draw(false);  
 }
@@ -104,12 +166,11 @@ function removeRowFromTable(uiElement, data) {
   if (!confirm('Do you want to remove this showcase')) {
     return;
   }
-
-  
   console.log(`removing the data ${data._id}`);
   HTTP.post(`${baseUrl}/showcases/delete`, {
     _id: data._id
   }).then(() => {
+
     showcasesTable
     .row(uiElement)
     .remove()
@@ -172,7 +233,8 @@ function updateShowCases(showcases) {
       { data: "age" },
       { data: "platforms" },
       { data: "region" },
-      { data: "null", defaultContent: '<i class="material-icons">delete_forever</i>'}
+      { data: "null", defaultContent: '<i class="material-icons edit">edit</i>'},
+      { data: "null", defaultContent: '<i class="material-icons remove">delete_forever</i>'}
     ],
   });
 }

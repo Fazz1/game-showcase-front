@@ -35,7 +35,7 @@
             <a class="nav-link" href="#" data-toggle="modal" data-target="#signupModal">Sign up <span class="sr-only">(current)</span></a>
           </li>
           <li class="navbar-item createShowcase-li">
-            <a class="nav-link" href="#" data-toggle="modal" data-target="#createShowcaseModal">Create Showcase</a>
+            <a class="nav-link" href="#" data-toggle="modal" data-target="#createShowcaseModal" onclick="setEditModel(false)">Create Showcase</a>
           </li>
           <li class="navbar-item logout-li">
             <a class="nav-link" href="#" onclick="logoutAction()">Logout</a>
@@ -127,12 +127,12 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="createShowcaseModalLabel">Create ShowCase</h5>
+            <h5 class="modal-title" id="createShowcaseModalLabel">Create/Edit ShowCase</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form onsubmit="return createShowcaseAction()">
+          <form onsubmit="return createEditShowcaseAction()">
             <div class="modal-body">
               <div class="form-group">
                 <label for="gameTitle">Game Title</label>
@@ -162,7 +162,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <button type="submit" class="btn btn-primary">Create</button>
+              <button type="submit" class="btn btn-primary">Submit</button>
             </div>
           </form>
         </div>
@@ -208,7 +208,8 @@
                 <th>Age</th>
                 <th>platforms</th>
                 <th>Region</th>
-                <th style="width: 30px">Action</th>
+                <th style="width: 30px">Edit</th>
+                <th style="width: 30px">Delete</th>
               </tr>
             </thead>
             <tbody class="showcases">
@@ -255,10 +256,18 @@
 
 
 
-      $('#showcase-table tbody').on( 'click', 'i', function () {
+      $('#showcase-table tbody').on( 'click', 'i.remove', function () {
         var data = showcasesTable.row( $(this).parents('tr') ).data();
         removeRowFromTable($(this).parents('tr'), data);
         //alert( data[0] +"'s salary is: "+ data[ 5 ] );
+      });
+      $('#showcase-table tbody').on( 'click', 'i.edit', function () {
+        var data = showcasesTable.row( $(this).parents('tr') ).data();
+        
+        makeToUpdateMode(this, data);
+        console.log(data);
+
+        
       });
 
 
